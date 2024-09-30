@@ -2,6 +2,7 @@ package ru.mephi.backend.service;
 
 import ru.mephi.backend.dto.Coordinate;
 import ru.mephi.backend.dto.PolygonRequest;
+import ru.mephi.backend.enums.Category;
 
 import java.util.List;
 
@@ -30,5 +31,28 @@ public class PolygonServiceImpl implements PolygonService {
         }
 
         return Math.abs(area) / 2.0;
+    }
+
+    @Override
+    public int calculatePopulation(PolygonRequest polygonRequest) {
+        double area = calculateArea(polygonRequest);
+        int population = 0;
+
+        if (polygonRequest.getCategory().equals(Category.RESIDENTIAL)) {
+            double areaPerPerson;
+            if ("comfort".equalsIgnoreCase(polygonRequest.getResidentialType())) {
+                areaPerPerson = 45.0;
+            } else {
+                areaPerPerson = 25.0;
+            }
+            double totalArea = area * polygonRequest.getFloors();
+            population = (int) (totalArea / areaPerPerson);
+        } else if (polygonRequest.getCategory().equals(Category.OFFICE)) {
+            double areaPerPerson = 35.0;
+            population = (int) (area / areaPerPerson);
+        }
+
+        return population;
+
     }
 }
