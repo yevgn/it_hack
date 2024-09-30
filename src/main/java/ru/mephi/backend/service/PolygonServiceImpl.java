@@ -1,5 +1,6 @@
 package ru.mephi.backend.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.locationtech.proj4j.*;
 import org.springframework.stereotype.Service;
 import ru.mephi.backend.dto.Coordinate;
@@ -10,6 +11,7 @@ import ru.mephi.backend.enums.ResidentialType;
 import java.util.List;
 
 @Service
+@Slf4j
 public class PolygonServiceImpl implements PolygonService {
     @Override
     public double calculateArea(PolygonRequest polygonRequest) {
@@ -18,7 +20,7 @@ public class PolygonServiceImpl implements PolygonService {
 
         CRSFactory crsFactory = new CRSFactory();
         CoordinateReferenceSystem geographic = crsFactory.createFromName("EPSG:4326"); // WGS84
-        CoordinateReferenceSystem projected = crsFactory.createFromName("EPSG:32633"); // UTM Zone 33N
+        CoordinateReferenceSystem projected = crsFactory.createFromName("EPSG:28407"); // Pulkovo 1942 / Gauss-Kruger zone 7
 
         CoordinateTransformFactory ctFactory = new CoordinateTransformFactory();
         CoordinateTransform transform = ctFactory.createTransform(geographic, projected);
