@@ -1,32 +1,56 @@
 package ru.mephi.backend.service;
 
+import org.locationtech.proj4j.*;
+import org.springframework.stereotype.Service;
 import ru.mephi.backend.dto.Coordinate;
 import ru.mephi.backend.dto.PolygonRequest;
 import ru.mephi.backend.enums.Category;
+import ru.mephi.backend.enums.ResidentialType;
 
 import java.util.List;
 
+@Service
 public class PolygonServiceImpl implements PolygonService {
     @Override
     public double calculateArea(PolygonRequest polygonRequest) {
         List<Coordinate> coordinatesList = polygonRequest.getCoordinates();
-
         int n = coordinatesList.size();
 
-        // Ensure the polygon is closed by repeating the first point at the end if necessary
-        if (coordinatesList.get(0).getX() != coordinatesList.get(n - 1).getX() ||
-                coordinatesList.get(0).getY() != coordinatesList.get(n - 1).getY()) {
-            coordinatesList.add(new Coordinate(coordinatesList.get(0).getX(), coordinatesList.get(0).getY()));
-            n = coordinatesList.size();
+        CRSFactory crsFactory = new CRSFactory();
+        CoordinateReferenceSystem geographic = crsFactory.createFromName("EPSG:4326"); // WGS84
+        CoordinateReferenceSystem projected = crsFactory.createFromName("EPSG:32633"); // UTM Zone 33N
+
+        CoordinateTransformFactory ctFactory = new CoordinateTransformFactory();
+        CoordinateTransform transform = ctFactory.createTransform(geographic, projected);
+
+        ProjCoordinate srcCoord = new ProjCoordinate();
+        ProjCoordinate destCoord = new ProjCoordinate();
+        double[][] projectedCoordinates = new double[n][2];
+
+        for (int i = 0; i < n; i++) {
+            srcCoord.x = coordinatesList.get(i).getLongitude();
+            srcCoord.y = coordinatesList.get(i).getLatitude();
+            transform.transform(srcCoord, destCoord);
+            projectedCoordinates[i][0] = destCoord.x;
+            projectedCoordinates[i][1] = destCoord.y;
+        }
+
+        if (projectedCoordinates[0][0] != projectedCoordinates[n - 1][0] ||
+                projectedCoordinates[0][1] != projectedCoordinates[n - 1][1]) {
+            n++;
+            double[][] temp = new double[n][2];
+            System.arraycopy(projectedCoordinates, 0, temp, 0, projectedCoordinates.length);
+            temp[n - 1][0] = projectedCoordinates[0][0];
+            temp[n - 1][1] = projectedCoordinates[0][1];
+            projectedCoordinates = temp;
         }
 
         double area = 0.0;
-
         for (int i = 0; i < n - 1; i++) {
-            double x1 = coordinatesList.get(i).getX();
-            double y1 = coordinatesList.get(i).getY();
-            double x2 = coordinatesList.get(i + 1).getX();
-            double y2 = coordinatesList.get(i + 1).getY();
+            double x1 = projectedCoordinates[i][0];
+            double y1 = projectedCoordinates[i][1];
+            double x2 = projectedCoordinates[i + 1][0];
+            double y2 = projectedCoordinates[i + 1][1];
             area += x1 * y2 - x2 * y1;
         }
 
@@ -40,7 +64,7 @@ public class PolygonServiceImpl implements PolygonService {
 
         if (polygonRequest.getCategory().equals(Category.RESIDENTIAL)) {
             double areaPerPerson;
-            if ("comfort".equalsIgnoreCase(polygonRequest.getResidentialType())) {
+            if (polygonRequest.getResidentialType().equals(ResidentialType.COMFORT)) {
                 areaPerPerson = 45.0;
             } else {
                 areaPerPerson = 25.0;
@@ -53,6 +77,5 @@ public class PolygonServiceImpl implements PolygonService {
         }
 
         return population;
-
     }
 }
