@@ -3,6 +3,7 @@ package ru.mephi.backend.service;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.proj4j.*;
 import org.springframework.stereotype.Service;
+import ru.mephi.backend.dto.AreaRequest;
 import ru.mephi.backend.dto.Coordinate;
 import ru.mephi.backend.dto.PolygonRequest;
 import ru.mephi.backend.enums.Category;
@@ -13,6 +14,7 @@ import java.util.List;
 @Service
 @Slf4j
 public class PolygonServiceImpl implements PolygonService {
+
     @Override
     public double calculateArea(PolygonRequest polygonRequest) {
         List<Coordinate> coordinatesList = polygonRequest.getCoordinates();
@@ -60,20 +62,31 @@ public class PolygonServiceImpl implements PolygonService {
     }
 
     @Override
-    public int calculatePopulation(PolygonRequest polygonRequest) {
+    public int calculatePopulationFromPolygonRequest(PolygonRequest polygonRequest) {
         double area = calculateArea(polygonRequest);
+        return calcPopulation(area, polygonRequest.getCategory(), polygonRequest.getResidentialType(),
+                polygonRequest.getFloors());
+    }
+
+    @Override
+    public int calculatePopulationFromAreaRequest(AreaRequest area1) {
+        double area = area1.getArea();
+        return calcPopulation(area, area1.getCategory(), area1.getResidentialType(), area1.getFloors());
+    }
+
+    private int calcPopulation(double area, Category category, ResidentialType type, int floors) {
         int population = 0;
 
-        if (polygonRequest.getCategory().equals(Category.RESIDENTIAL)) {
+        if (category.equals(Category.RESIDENTIAL)) {
             double areaPerPerson;
-            if (polygonRequest.getResidentialType().equals(ResidentialType.COMFORT)) {
+            if (type.equals(ResidentialType.COMFORT)) {
                 areaPerPerson = 45.0;
             } else {
                 areaPerPerson = 25.0;
             }
-            double totalArea = area * polygonRequest.getFloors();
+            double totalArea = area * floors;
             population = (int) (totalArea / areaPerPerson);
-        } else if (polygonRequest.getCategory().equals(Category.OFFICE)) {
+        } else if (category.equals(Category.OFFICE)) {
             double areaPerPerson = 35.0;
             population = (int) (area / areaPerPerson);
         }

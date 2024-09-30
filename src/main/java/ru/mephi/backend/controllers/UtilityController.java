@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.mephi.backend.dto.AreaRequest;
 import ru.mephi.backend.dto.PolygonRequest;
 import ru.mephi.backend.service.PolygonService;
 
@@ -20,8 +21,13 @@ public class UtilityController {
         return polygonService.calculateArea(polygonRequest);
     }
 
-    @PostMapping("/population")
+    @PostMapping("/population/polygon")
     public int calculatePopulation(@RequestBody PolygonRequest polygonRequest) {
-        return polygonService.calculatePopulation(polygonRequest);
+        return polygonService.calculatePopulationFromPolygonRequest(polygonRequest);
+    }
+
+    @PostMapping("/population/area")
+    public int calculatePopulationArea(@RequestBody AreaRequest areaRequest) {
+        return polygonService.calculatePopulationFromAreaRequest(areaRequest);
     }
 }
