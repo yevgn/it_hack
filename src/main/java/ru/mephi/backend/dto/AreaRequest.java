@@ -13,5 +13,4 @@ public class AreaRequest {
     private double area;
     private Category category;
     private ResidentialType residentialType;
-    private int floors;
 }

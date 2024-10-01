@@ -71,7 +71,7 @@ public class PolygonServiceImpl implements PolygonService {
     @Override
     public int calculatePopulationFromAreaRequest(AreaRequest area1) {
         double area = area1.getArea();
-        return calcPopulation(area, area1.getCategory(), area1.getResidentialType(), area1.getFloors());
+        return calcPopulation(area, area1.getCategory(), area1.getResidentialType(), 1);
     }
 
     private int calcPopulation(double area, Category category, ResidentialType type, int floors) {
