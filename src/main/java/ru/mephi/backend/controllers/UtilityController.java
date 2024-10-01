@@ -37,7 +37,6 @@ public class UtilityController {
         return polygonService.calculateLoadFromPolygon(polygonRequest);
     }
 
-
     @PostMapping("/load/area")
     public LoadResult calculateLoadArea(@RequestBody AreaRequest areaRequest) {
         return polygonService.calculateLoadFromArea(areaRequest);
