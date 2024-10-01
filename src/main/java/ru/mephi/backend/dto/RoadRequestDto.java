@@ -8,7 +8,7 @@ import ru.mephi.backend.enums.RoadType;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RoadDto {
+public class RoadRequestDto {
     private String name;
     private RoadType type;
     private Coordinate[] coordinates;
