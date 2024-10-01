@@ -1,14 +1,16 @@
 package ru.mephi.backend.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.mephi.backend.enums.TransportObjectCategory;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransportObject {
-    private TransportObjectCategory category;
+@Builder
+public class Road {
     private String name;
 }

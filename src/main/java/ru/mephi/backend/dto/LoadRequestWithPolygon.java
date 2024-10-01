@@ -11,5 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 public class LoadRequestWithPolygon {
     private PolygonRequest polygonRequest;
-    private List<TransportObjectRequest> transportObjectRequestList;
+    private List<RoadDTO> roadList;
+    private List<MetroStationDTO> metroStationList;
 }

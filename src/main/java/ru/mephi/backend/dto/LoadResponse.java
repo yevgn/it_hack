@@ -9,8 +9,9 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoadResult {
+public class LoadResponse {
     // пары транспортный объект - изменение пропускной способности
     // если со знаком "+" - запас, если с "-" - дефицит
-    private Map<TransportObject, Double> capacityChanges;
+    private Map<RoadDTO, Double> roadCapacityChanges;
+    private Map<MetroStationDTO, Double> metroStationCapacityChanges;
 }
