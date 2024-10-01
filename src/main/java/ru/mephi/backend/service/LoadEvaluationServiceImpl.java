@@ -10,6 +10,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
 
     @Override
     public Map<TransportObject, Double> getCapacityChanges(List<TransportObjectRequest> transportObjects) {
-        return Map.of();
+        // распределить доп нагрузку относительно пиковой пропускной способности каждого объекта
+        return null;
     }
 }

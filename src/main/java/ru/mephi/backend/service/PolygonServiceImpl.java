@@ -65,14 +65,17 @@ public class PolygonServiceImpl implements PolygonService {
     @Override
     public int calculatePopulationFromPolygonRequest(PolygonRequest polygonRequest) {
         double area = calculateSquare(polygonRequest);
-        return calcPopulation(area, polygonRequest.getCategory(), polygonRequest.getType(),
-                polygonRequest.getFloors());
+        final float percentOfOverallDemandForResidentialBuilding = 0.1f; // 10% от спроса для жилых застроек
+        return Math.round(calcPopulation(area, polygonRequest.getCategory(), polygonRequest.getType(),
+                polygonRequest.getFloors()) * percentOfOverallDemandForResidentialBuilding);
     }
 
     @Override
     public int calculatePopulationFromAreaRequest(AreaRequest area1) {
         double area = area1.getArea();
-        return calcPopulation(area, area1.getCategory(), area1.getType(), 1);
+        final float percentOfOverallDemandForOffices = 0.35f;
+        return Math.round(calcPopulation(area, area1.getCategory(), area1.getType(),
+                1) * percentOfOverallDemandForOffices);
     }
 
     @Override

@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Coordinate {
-    private double latitude;  // Широта
-    private double longitude; // Долгота
+    private float latitude;  // Широта
+    private float longitude; // Долгота
 }
