@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.mephi.backend.dto.AreaRequest;
+import ru.mephi.backend.dto.LoadResult;
 import ru.mephi.backend.dto.PolygonRequest;
 import ru.mephi.backend.service.PolygonService;
 
@@ -29,5 +30,16 @@ public class UtilityController {
     @PostMapping("/population/area")
     public int calculatePopulationArea(@RequestBody AreaRequest areaRequest) {
         return polygonService.calculatePopulationFromAreaRequest(areaRequest);
+    }
+
+    @PostMapping("/load/polygon")
+    public LoadResult calculateLoad(@RequestBody PolygonRequest polygonRequest) {
+        return polygonService.calculateLoadFromPolygon(polygonRequest);
+    }
+
+
+    @PostMapping("/load/area")
+    public LoadResult calculateLoadArea(@RequestBody AreaRequest areaRequest) {
+        return polygonService.calculateLoadFromArea(areaRequest);
     }
 }

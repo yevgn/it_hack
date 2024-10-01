@@ -5,6 +5,7 @@ import org.locationtech.proj4j.*;
 import org.springframework.stereotype.Service;
 import ru.mephi.backend.dto.AreaRequest;
 import ru.mephi.backend.dto.Coordinate;
+import ru.mephi.backend.dto.LoadResult;
 import ru.mephi.backend.dto.PolygonRequest;
 import ru.mephi.backend.enums.Category;
 import ru.mephi.backend.enums.ResidentialType;
@@ -74,6 +75,18 @@ public class PolygonServiceImpl implements PolygonService {
         return calcPopulation(area, area1.getCategory(), area1.getResidentialType(), 1);
     }
 
+    @Override
+    public LoadResult calculateLoadFromPolygon(PolygonRequest polygonRequest) {
+        int totalPopulation = calculatePopulationFromPolygonRequest(polygonRequest);
+        return calcLoad(totalPopulation);
+    }
+
+    @Override
+    public LoadResult calculateLoadFromArea(AreaRequest area) {
+        int totalPopulation = calculatePopulationFromAreaRequest(area);
+        return calcLoad(totalPopulation);
+    }
+
     private int calcPopulation(double area, Category category, ResidentialType type, int floors) {
         int population = 0;
 
@@ -92,5 +105,18 @@ public class PolygonServiceImpl implements PolygonService {
         }
 
         return population;
+    }
+
+    private LoadResult calcLoad(int totalPopulation) {
+        int workingAgePopulation = (int) (totalPopulation * 0.57);
+
+        // Modal split: 70% public transport, 30% individual transport
+        int publicTransportUsers = (int) (workingAgePopulation * 0.70);
+        int individualTransportUsers = (int) (workingAgePopulation * 0.30);
+
+        // Calculate the car load: number of cars needed considering an occupancy rate of 1.2
+        int carLoad = (int) Math.ceil(individualTransportUsers / 1.2);
+
+        return new LoadResult(carLoad, publicTransportUsers);
     }
 }
