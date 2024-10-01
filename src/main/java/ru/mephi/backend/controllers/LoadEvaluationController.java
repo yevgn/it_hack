@@ -1,5 +1,6 @@
 package ru.mephi.backend.controllers;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -9,12 +10,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.mephi.backend.dto.LoadRequestWithArea;
 import ru.mephi.backend.dto.LoadRequestWithPolygon;
+import ru.mephi.backend.service.LoadEvaluationService;
 
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/load_evaluation")
 public class LoadEvaluationController {
-    private static final Logger log = LoggerFactory.getLogger(LoadEvaluationController.class);
+
+    private final LoadEvaluationService loadEvaluationService;
 
     @PostMapping("/area")
     public ResponseEntity<LoadRequestWithArea> getLoadEvaluationByArea(@RequestBody LoadRequestWithArea loadRequest){
@@ -23,7 +27,7 @@ public class LoadEvaluationController {
         // отправить запрос яндексу
         // отправить запрос graphhoper
         // отправить ответ в виде LoadResult
-        return null;
+        return ResponseEntity.ok(loadRequest);
     }
 
     @PostMapping("/polygon")
@@ -33,7 +37,7 @@ public class LoadEvaluationController {
         // отправить запрос яндексу
         // отправить запрос graphhoper
         // отправить ответ в виде LoadResult
-        return null;
+        return ResponseEntity.ok(loadRequest);
     }
 
 }
