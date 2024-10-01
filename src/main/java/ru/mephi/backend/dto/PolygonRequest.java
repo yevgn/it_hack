@@ -1,19 +1,23 @@
 package ru.mephi.backend.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import ru.mephi.backend.enums.Category;
+import lombok.*;
+import ru.mephi.backend.enums.BuildingCategory;
 import ru.mephi.backend.enums.ResidentialType;
 
 import java.util.List;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class PolygonRequest {
+@Getter
+@Setter
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class PolygonRequest extends BuildingRequest{
     private List<Coordinate> coordinates;
-    private Category category;
-    private ResidentialType residentialType;
-    private int floors;  // Количество этажей (для использования, если категория "residential")
+    private int floors;
+
+    public PolygonRequest(BuildingCategory category, ResidentialType type, List<Coordinate> coordinates, int floors){
+        super(category, type);
+        this.coordinates = coordinates;
+        this.floors = floors;
+    }
+
 }

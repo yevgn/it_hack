@@ -1,6 +1,6 @@
 package ru.mephi.backend.enums;
 
-public enum Category {
+public enum BuildingCategory {
     RESIDENTIAL,
     OFFICE,
 }

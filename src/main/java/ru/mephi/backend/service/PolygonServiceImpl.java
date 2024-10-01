@@ -5,9 +5,9 @@ import org.locationtech.proj4j.*;
 import org.springframework.stereotype.Service;
 import ru.mephi.backend.dto.AreaRequest;
 import ru.mephi.backend.dto.Coordinate;
-import ru.mephi.backend.dto.LoadResult;
+import ru.mephi.backend.dto.LoadAdd;
 import ru.mephi.backend.dto.PolygonRequest;
-import ru.mephi.backend.enums.Category;
+import ru.mephi.backend.enums.BuildingCategory;
 import ru.mephi.backend.enums.ResidentialType;
 
 import java.util.List;
@@ -76,21 +76,21 @@ public class PolygonServiceImpl implements PolygonService {
     }
 
     @Override
-    public LoadResult calculateLoadFromPolygon(PolygonRequest polygonRequest) {
+    public LoadAdd calculateLoadFromPolygon(PolygonRequest polygonRequest) {
         int totalPopulation = calculatePopulationFromPolygonRequest(polygonRequest);
         return calcLoad(totalPopulation);
     }
 
     @Override
-    public LoadResult calculateLoadFromArea(AreaRequest area) {
+    public LoadAdd calculateLoadFromArea(AreaRequest area) {
         int totalPopulation = calculatePopulationFromAreaRequest(area);
         return calcLoad(totalPopulation);
     }
 
-    private int calcPopulation(double area, Category category, ResidentialType type, int floors) {
+    private int calcPopulation(double area, BuildingCategory category, ResidentialType type, int floors) {
         int population = 0;
 
-        if (category.equals(Category.RESIDENTIAL)) {
+        if (category.equals(BuildingCategory.RESIDENTIAL)) {
             double areaPerPerson;
             if (type.equals(ResidentialType.COMFORT)) {
                 areaPerPerson = 45.0;
@@ -99,7 +99,7 @@ public class PolygonServiceImpl implements PolygonService {
             }
             double totalArea = area * floors;
             population = (int) (totalArea / areaPerPerson);
-        } else if (category.equals(Category.OFFICE)) {
+        } else if (category.equals(BuildingCategory.OFFICE)) {
             double areaPerPerson = 35.0;
             population = (int) (area / areaPerPerson);
         }
@@ -107,7 +107,7 @@ public class PolygonServiceImpl implements PolygonService {
         return population;
     }
 
-    private LoadResult calcLoad(int totalPopulation) {
+    private LoadAdd calcLoad(int totalPopulation) {
         int workingAgePopulation = (int) (totalPopulation * 0.57);
 
         // Modal split: 70% public transport, 30% individual transport
@@ -117,6 +117,6 @@ public class PolygonServiceImpl implements PolygonService {
         // Calculate the car load: number of cars needed considering an occupancy rate of 1.2
         int carLoad = (int) Math.ceil(individualTransportUsers / 1.2);
 
-        return new LoadResult(carLoad, publicTransportUsers);
+        return new LoadAdd(carLoad, publicTransportUsers);
     }
 }

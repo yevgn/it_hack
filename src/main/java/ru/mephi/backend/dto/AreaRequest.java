@@ -1,16 +1,18 @@
 package ru.mephi.backend.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import ru.mephi.backend.enums.Category;
+import lombok.*;
+import ru.mephi.backend.enums.BuildingCategory;
 import ru.mephi.backend.enums.ResidentialType;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class AreaRequest {
+@Getter
+@Setter
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class AreaRequest extends BuildingRequest {
     private double area;
-    private Category category;
-    private ResidentialType residentialType;
+
+    public AreaRequest(BuildingCategory category, ResidentialType type, double area ){
+        super(category, type);
+        this.area = area;
+    }
 }
