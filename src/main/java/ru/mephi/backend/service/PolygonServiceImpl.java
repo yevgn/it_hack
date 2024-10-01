@@ -17,7 +17,7 @@ import java.util.List;
 public class PolygonServiceImpl implements PolygonService {
 
     @Override
-    public double calculateArea(PolygonRequest polygonRequest) {
+    public double calculateSquare(PolygonRequest polygonRequest) {
         List<Coordinate> coordinatesList = polygonRequest.getCoordinates();
         int n = coordinatesList.size();
 
@@ -64,15 +64,15 @@ public class PolygonServiceImpl implements PolygonService {
 
     @Override
     public int calculatePopulationFromPolygonRequest(PolygonRequest polygonRequest) {
-        double area = calculateArea(polygonRequest);
-        return calcPopulation(area, polygonRequest.getCategory(), polygonRequest.getResidentialType(),
+        double area = calculateSquare(polygonRequest);
+        return calcPopulation(area, polygonRequest.getCategory(), polygonRequest.getType(),
                 polygonRequest.getFloors());
     }
 
     @Override
     public int calculatePopulationFromAreaRequest(AreaRequest area1) {
         double area = area1.getArea();
-        return calcPopulation(area, area1.getCategory(), area1.getResidentialType(), 1);
+        return calcPopulation(area, area1.getCategory(), area1.getType(), 1);
     }
 
     @Override

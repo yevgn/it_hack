@@ -1,10 +1,7 @@
 package ru.mephi.backend.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.mephi.backend.dto.AreaRequest;
 import ru.mephi.backend.dto.LoadAdd;
 import ru.mephi.backend.dto.PolygonRequest;
@@ -12,14 +9,14 @@ import ru.mephi.backend.service.PolygonService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/polygon")
+@RequestMapping("/api/utility")
 public class UtilityController {
 
     private final PolygonService polygonService;
 
-    @PostMapping("/area")
-    public double calculateArea(@RequestBody PolygonRequest polygonRequest) {
-        return polygonService.calculateArea(polygonRequest);
+    @PostMapping("/square")
+    public double calculateSquare(@RequestBody PolygonRequest polygonRequest) {
+        return polygonService.calculateSquare(polygonRequest);
     }
 
     @PostMapping("/population/polygon")

@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoadRequest {
-    private BuildingRequest buildingRequest;
-    private TransportObjectRequest transportObjectRequest;
+public class LoadRequestWithArea {
+    private AreaRequest areaRequest;
+    private List<TransportObjectRequest> transportObjectRequestList;
 }

@@ -6,18 +6,12 @@ import ru.mephi.backend.enums.ResidentialType;
 
 import java.util.List;
 
-@Getter
-@Setter
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
-public class PolygonRequest extends BuildingRequest{
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PolygonRequest{
+    private BuildingCategory category;
+    private ResidentialType type;
     private List<Coordinate> coordinates;
     private int floors;
-
-    public PolygonRequest(BuildingCategory category, ResidentialType type, List<Coordinate> coordinates, int floors){
-        super(category, type);
-        this.coordinates = coordinates;
-        this.floors = floors;
-    }
-
 }

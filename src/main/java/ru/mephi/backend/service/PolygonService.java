@@ -5,7 +5,7 @@ import ru.mephi.backend.dto.LoadAdd;
 import ru.mephi.backend.dto.PolygonRequest;
 
 public interface PolygonService {
-    double calculateArea(PolygonRequest polygonRequest);
+    double calculateSquare(PolygonRequest polygonRequest);
     int calculatePopulationFromPolygonRequest(PolygonRequest polygonRequest);
     int calculatePopulationFromAreaRequest(AreaRequest area);
     LoadAdd calculateLoadFromPolygon(PolygonRequest polygonRequest);
