@@ -103,6 +103,8 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
         return metroStationCapacityChanges;
     }
 
+    // Нахождение ближайшей дороги через запрос к YandexGeocoderAPI
+    // Данный метод не используется, однако, изначально мы это планировали
     public Road getClosestRoad(Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
 

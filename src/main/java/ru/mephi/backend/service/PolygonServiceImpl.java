@@ -152,7 +152,7 @@ public class PolygonServiceImpl implements PolygonService {
         if(category == BuildingCategory.RESIDENTIAL)
             population = Math.round(population * percentOfOverallDemandForResidencies);
         if(category == BuildingCategory.OFFICE)
-            population = Math.round(population * percentOfOverallDemandForOffices;
+            population = Math.round(population * percentOfOverallDemandForOffices);
 
         return population;
     }
