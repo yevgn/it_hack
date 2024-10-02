@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import ru.mephi.backend.dto.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -18,10 +19,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -44,23 +43,60 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
             build();
 
     @Override
-    public Map<RoadDTO, Double> getRoadCapacityChanges(List<RoadDTO> roads, int extraLoad, Coordinate constructionPoint)
+    public Map<RoadDTO, Integer> getRoadCapacityChanges(Set<RoadDTO> roads, int extraLoad, Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
-        // распределить доп нагрузку относительно пиковой пропускной способности каждого объекта
-        List<RoadDTO> roadsAlongShortestWay = getRoadsAlongShortestWay(roads,
-                getCoordinateListOfShortestWayToCityCenter(constructionPoint));
-        List<MetroStation> closestMetroStations = getClosestMetroStations(constructionPoint);
 
+        // Получили все дороги вдоль кратчайшего пути
+        Set<RoadDTO> roadsAlongShortestRoute =
+                getRoadsAlongShortestWay(roads, getCoordinateListOfShortestRoute(constructionPoint));
 
-        return null;
+        // Дороги на фрагменте карты которые не входят в кратчайший путь
+        Set<RoadDTO> roadsNotIncludedInShortestRoute =
+                roadsAlongShortestRoute.parallelStream().filter( o -> !roads.contains(o)).collect(Collectors.toSet());
+
+        // По условию 80% едет в центр (вдоль кратчайшего пути)
+        final float percentCarDrivingToCenter = 0.8f;
+        Map<RoadDTO, Integer> roadCapacityChanges
+                = calcRoadCapacityChanges(roadsAlongShortestRoute, Math.round(extraLoad * percentCarDrivingToCenter));
+
+        // По условию 20% едет на окраины
+        // Объединяем множества
+        final float percentCarDrivingToSuburbs = 0.2f;
+        roadCapacityChanges.putAll(
+                calcRoadCapacityChanges(
+                        roadsNotIncludedInShortestRoute, Math.round(extraLoad * percentCarDrivingToSuburbs )));
+
+        return roadCapacityChanges;
     }
 
 
     @Override
-    public Map<MetroStationDTO, Double> getMetroStationCapacityChanges(List<MetroStationDTO> metroStations,
-                                                                       int extraLoad, Coordinate constructionPoint) {
-        // распределить доп нагрузку относительно пиковой пропускной способности каждого объекта
-        return null;
+    public Map<MetroStationDTO, Integer> getMetroStationCapacityChanges(Set<MetroStationDTO> metroStations,
+                                                                       int extraLoad, Coordinate constructionPoint)
+            throws URISyntaxException, IOException, InterruptedException {
+
+        // Получили ближайшие станции метро
+        Set<MetroStation> closestMS = getClosestMetroStations(constructionPoint);
+
+        // Преобразовали в DTO
+        Set<MetroStationDTO> closestMSDTO = mapToDTO(closestMS, metroStations);
+
+        // Более дальние станции метро на фрагменте карты
+        Set<MetroStationDTO> notClosestMSDTO = closestMSDTO.parallelStream().
+                filter( o -> !metroStations.contains(o)).collect(Collectors.toSet());
+
+        // Предположили, что 80% населения пользуется ближайшими станциями метро
+        final float percentPeopleGoingToClosestMS = 0.8f;
+        Map<MetroStationDTO, Integer> metroStationCapacityChanges
+                = calcMetroStationCapacityChanges(closestMSDTO, Math.round(extraLoad * percentPeopleGoingToClosestMS));
+
+       // Предположим что оставшиеся 20% пользуются более дальними станциями метро
+        final float percentPeopleGoingToFartherMS = 0.2f;
+        metroStationCapacityChanges.putAll(
+                calcMetroStationCapacityChanges(notClosestMSDTO, Math.round(extraLoad * percentPeopleGoingToFartherMS))
+        );
+
+        return metroStationCapacityChanges;
     }
 
     public Road getClosestRoad(Coordinate constructionPoint)
@@ -95,10 +131,12 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
 
     }
 
-    public List<MetroStation> getClosestMetroStations(Coordinate constructionPoint)
+    public Set<MetroStation> getClosestMetroStations(Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
 
-        final int limit = 3;
+
+        // Возьмем, например, две ближайшие станции метро
+        final int limit = 2;
         String request = String.format(YANDEX_GEOCODER_URL,constructionPoint.getLongitude(),
                 constructionPoint.getLatitude(),"metro", "json" );
 
@@ -109,7 +147,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
                 .getJSONObject("GeoObjectCollection")
                 .getJSONArray("featureMember");
 
-        List<MetroStation> closestMetroStations = new ArrayList<>();
+        Set<MetroStation> closestMetroStations = new HashSet<>();
 
         for(int i = 0; i < limit; i++){
             if(i>= members.length())
@@ -137,7 +175,33 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
         return closestMetroStations;
     }
 
-    private List<Coordinate> getCoordinateListOfShortestWayToCityCenter(Coordinate constructionPoint)
+    private Set<MetroStationDTO> mapToDTO(Set<MetroStation> msSet, Set<MetroStationDTO> msDTOSet){
+        Set<MetroStationDTO> res = new HashSet<>();
+        MetroStationDTO msDTO;
+        Iterator<MetroStationDTO> iter;
+
+        for(MetroStation metroStation: msSet ){
+            iter = msDTOSet.iterator();
+            while(iter.hasNext()){
+                msDTO = iter.next();
+                if(metroStation.getName().equals(msDTO.getName()) && metroStation.getRoute().equals(msDTO.getRoute())){
+                    res.add(MetroStationDTO.builder()
+                            .name(msDTO.getName())
+                            .route(msDTO.getRoute())
+                            .coordinate(msDTO.getCoordinate())
+                            .capacity(msDTO.getCapacity())
+                            .intensity(msDTO.getIntensity())
+                            .build()
+                    );
+                    break;
+                }
+            }
+        }
+
+        return res;
+    }
+
+    private List<Coordinate> getCoordinateListOfShortestRoute(Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
 
 
@@ -182,54 +246,81 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
     }
 
     // проверить имеющиеся дороги на фрагмента карты на принадлежность кратчайшему маршруту до центра
-    private List<RoadDTO> getRoadsAlongShortestWay(List<RoadDTO> roadsOnMap,
-                                                                     List<Coordinate> shortestWayCoordinates){
-        // делим точки вдоль кратч пути на отрезки
-        // делим точки каждой дороги на фрагменте карты на отрезке
-        // проверяем отрезки вдоль дороги на пересечение хотя бы с двумя отрезками вдоль кратч пути
+    private Set<RoadDTO> getRoadsAlongShortestWay(Set<RoadDTO> roadsOnMap,
+                                                  List<Coordinate> shortestRouteCoordinates){
 
         final int step = 1; // сколько координат пропускаем
         final int intersectionAmountRequired = 1; // сколько пересечений нужно
-        boolean latitudeIntersection = false, longitudeIntersection = false;
         int intersections = 0;
-        List<RoadDTO> roadsAlongShortestWay = new ArrayList<>();
+
+        Set<RoadDTO> roadsAlongShortestRoute = new HashSet<>();
 
         for (RoadDTO roadDTO : roadsOnMap) {
 
             List<Coordinate> coordinates = roadDTO.getCoordinates();
-
-            for (int j = 0; j + step < coordinates.size() && j + step < shortestWayCoordinates.size(); j += step) {
-                float roadLeftLatitude = coordinates.get(j).getLatitude();
-                float roadRightLatitude = coordinates.get(j + step).getLatitude();
-                float roadLeftLongitude = coordinates.get(j).getLongitude();
-                float roadRightLongitude = coordinates.get(j + step).getLongitude();
-
-                float shortestWayLeftLatitude = shortestWayCoordinates.get(j).getLatitude();
-                float shortestWayRightLatitude = shortestWayCoordinates.get(j + step).getLatitude();
-                float shortestWayLeftLongitude = shortestWayCoordinates.get(j).getLongitude();
-                float shortestWayRightLongitude = shortestWayCoordinates.get(j + step).getLongitude();
-
-                if (roadLeftLatitude > shortestWayLeftLatitude && roadLeftLatitude < shortestWayRightLatitude ||
-                        roadRightLatitude > shortestWayLeftLatitude && roadRightLatitude < shortestWayRightLatitude ||
-                        roadLeftLatitude < shortestWayLeftLatitude && roadRightLatitude > shortestWayRightLatitude)
-                    latitudeIntersection = true;
-
-                if (roadLeftLongitude > shortestWayLeftLongitude && roadLeftLongitude < shortestWayRightLongitude ||
-                        roadRightLongitude > shortestWayLeftLongitude && roadRightLongitude < shortestWayRightLongitude ||
-                        roadLeftLongitude < shortestWayLeftLongitude && roadRightLongitude > shortestWayRightLongitude)
-                    longitudeIntersection = true;
-
-                if (latitudeIntersection && longitudeIntersection)
+            for(int i = 0; i + step < coordinates.size(); i++){
+                if(isIntersects(coordinates.get(i), coordinates.get(i + step), shortestRouteCoordinates, step))
                     intersections++;
 
                 if (intersections == intersectionAmountRequired) {
-                    roadsAlongShortestWay.add(roadDTO);
-                    continue;
+                    roadsAlongShortestRoute.add(roadDTO);
+                    break;
                 }
             }
+
         }
 
-        return roadsAlongShortestWay;
+        return roadsAlongShortestRoute;
+    }
+
+    private boolean isIntersects(Coordinate left, Coordinate right, List<Coordinate> shortestRouteCoordinates, int step) {
+        float shortestWayLeftLatitude, shortestWayRightLatitude;
+        float shortestWayLeftLongitude, shortestWayRightLongitude;
+
+        float roadLeftLatitude = left.getLatitude();
+        float roadRightLatitude = right.getLatitude();
+        float roadLeftLongitude = left.getLongitude();
+        float roadRightLongitude = right.getLongitude();
+
+        boolean latitudeIntersection = false, longitudeIntersection = false;
+
+        for (int j = 0; j + step < shortestRouteCoordinates.size(); j += step) {
+            shortestWayLeftLatitude = shortestRouteCoordinates.get(j).getLatitude();
+            shortestWayRightLatitude = shortestRouteCoordinates.get(j + step).getLatitude();
+            shortestWayLeftLongitude = shortestRouteCoordinates.get(j).getLongitude();
+            shortestWayRightLongitude = shortestRouteCoordinates.get(j + step).getLongitude();
+
+            if (roadLeftLatitude > shortestWayLeftLatitude && roadLeftLatitude < shortestWayRightLatitude ||
+                    roadRightLatitude > shortestWayLeftLatitude && roadRightLatitude < shortestWayRightLatitude ||
+                    roadLeftLatitude < shortestWayLeftLatitude && roadRightLatitude > shortestWayRightLatitude)
+                latitudeIntersection = true;
+
+            if (roadLeftLongitude > shortestWayLeftLongitude && roadLeftLongitude < shortestWayRightLongitude ||
+                    roadRightLongitude > shortestWayLeftLongitude && roadRightLongitude < shortestWayRightLongitude ||
+                    roadLeftLongitude < shortestWayLeftLongitude && roadRightLongitude > shortestWayRightLongitude)
+                longitudeIntersection = true;
+
+            if (latitudeIntersection && longitudeIntersection)
+                return true;
+        }
+
+        return false;
+    }
+
+    private Map<RoadDTO, Integer> calcRoadCapacityChanges(Set<RoadDTO> roads, int extraLoad){
+        int sum = roads.parallelStream().reduce(0, (x, r) -> x + r.getCapacity(), Integer::sum);
+        float x = (float)1/sum;
+
+        return roads.parallelStream().collect(Collectors.toMap(
+                r-> r, r -> r.getCapacity() - (r.getIntensity() + Math.round(r.getCapacity() * x)) ));
+    }
+
+    private Map<MetroStationDTO, Integer> calcMetroStationCapacityChanges(Set<MetroStationDTO> ms, int extraLoad){
+        int sum = ms.parallelStream().reduce(0, (x, r) -> x + r.getCapacity(), Integer::sum);
+        float x = (float)1/sum;
+
+        return ms.parallelStream().collect(Collectors.toMap(
+                r-> r, r -> r.getCapacity() - (r.getIntensity() + Math.round(r.getCapacity() * x)) ));
     }
 
 }

@@ -2,55 +2,94 @@ package ru.mephi.backend.controllers;
 
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ru.mephi.backend.dto.Coordinate;
-import ru.mephi.backend.dto.LoadAdd;
-import ru.mephi.backend.dto.LoadRequestWithArea;
-import ru.mephi.backend.dto.LoadRequestWithPolygon;
+import ru.mephi.backend.dto.*;
 import ru.mephi.backend.service.LoadEvaluationService;
 import ru.mephi.backend.service.PolygonService;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/load_evaluation")
+@Slf4j
 public class LoadEvaluationController {
 
     private final LoadEvaluationService loadEvaluationService;
     private final PolygonService polygonService;
 
     @PostMapping("/area")
-    public ResponseEntity<LoadRequestWithArea> getLoadEvaluationByArea(@RequestBody LoadRequestWithArea loadRequest)
-            throws URISyntaxException, IOException, InterruptedException {
-        // получить данные
-        // посчитать суммарную доп нагрузку
-        // отправить запрос яндексу
-        // отправить запрос graphhoper
-        // отправить ответ в виде LoadResult
-
+    public ResponseEntity<LoadResponse> getLoadEvaluationByArea(@RequestBody LoadRequestWithArea loadRequest) {
 
         LoadAdd extraLoad = polygonService.calculateLoadFromArea(loadRequest.getAreaRequest());
-        return ResponseEntity.ok(loadRequest);
+
+        try {
+            Map<RoadDTO, Integer> roadCapacityChanges = loadEvaluationService.getRoadCapacityChanges(
+                    loadRequest.getRoadSet(),
+                    extraLoad.getRoadLoad(),
+                    loadRequest.getAreaRequest().getCoordinate()
+            );
+
+            Map<MetroStationDTO, Integer> metroStationCapacityChanges = loadEvaluationService.getMetroStationCapacityChanges(
+                    loadRequest.getMetroStationSet(),
+                    extraLoad.getMetroStationLoad(),
+                    loadRequest.getAreaRequest().getCoordinate()
+            );
+
+            return ResponseEntity.ok(
+                    LoadResponse.builder()
+                            .roadCapacityChanges(roadCapacityChanges)
+                            .metroStationCapacityChanges(metroStationCapacityChanges)
+                            .build()
+            );
+
+        } catch (URISyntaxException | IOException | InterruptedException e){
+            log.error(e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/polygon")
-    public ResponseEntity<LoadRequestWithPolygon> getLoadEvaluationByPolygon(@RequestBody LoadRequestWithPolygon loadRequest){
-        // получить данные
-        // отправить запросы на UtilityController: посчитать площадь, население, доп нагрузку и тд
-        // отправить запрос яндексу
-        // отправить запрос graphhoper
-        // отправить ответ в виде LoadResult
+    public ResponseEntity<LoadResponse> getLoadEvaluationByPolygon(
+            @RequestBody LoadRequestWithPolygon loadRequest){
 
-        return ResponseEntity.ok(loadRequest);
+        try {
+            Coordinate constructionPoint = polygonService.calculateCentroid(loadRequest.getPolygonRequest());
+            LoadAdd extraLoad = polygonService.calculateLoadFromPolygon(loadRequest.getPolygonRequest());
+
+            Map<RoadDTO, Integer> roadCapacityChanges = loadEvaluationService.getRoadCapacityChanges(
+                    loadRequest.getRoadSet(),
+                    extraLoad.getRoadLoad(),
+                    constructionPoint
+            );
+
+            Map<MetroStationDTO, Integer> metroStationCapacityChanges = loadEvaluationService.getMetroStationCapacityChanges(
+                    loadRequest.getMetroStationSet(),
+                    extraLoad.getMetroStationLoad(),
+                    constructionPoint
+            );
+
+            return ResponseEntity.ok(
+                    LoadResponse.builder()
+                            .roadCapacityChanges(roadCapacityChanges)
+                            .metroStationCapacityChanges(metroStationCapacityChanges)
+                            .build()
+            );
+        } catch (URISyntaxException | IOException | InterruptedException e){
+            log.error(e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }

@@ -5,12 +5,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoadRequestWithArea {
     private AreaRequest areaRequest;
-    private List<RoadDTO> roadList;
-    private List<MetroStationDTO> metroStationList;
+    private Set<RoadDTO> roadSet;
+    private Set<MetroStationDTO> metroStationSet;
 }

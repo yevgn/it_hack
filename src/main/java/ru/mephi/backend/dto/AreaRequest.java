@@ -11,4 +11,5 @@ public class AreaRequest {
     private BuildingCategory category;
     private ResidentialType type;
     private double area;
+    Coordinate coordinate;
 }

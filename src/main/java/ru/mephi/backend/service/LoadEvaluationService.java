@@ -6,10 +6,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface LoadEvaluationService {
-    Map<RoadDTO, Double> getRoadCapacityChanges(List<RoadDTO> roads, int extraLoad, Coordinate constructionPoint)
+    Map<RoadDTO, Integer> getRoadCapacityChanges(Set<RoadDTO> roads, int extraLoad, Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException;
-    Map<MetroStationDTO, Double> getMetroStationCapacityChanges(
-            List<MetroStationDTO> metroStations, int extraLoad, Coordinate constructionPoint);
+
+    Map<MetroStationDTO, Integer> getMetroStationCapacityChanges(
+            Set<MetroStationDTO> metroStations, int extraLoad, Coordinate constructionPoint)
+            throws URISyntaxException, IOException, InterruptedException;
 }

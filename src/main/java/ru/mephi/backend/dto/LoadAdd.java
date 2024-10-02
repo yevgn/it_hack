@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class LoadAdd {
-    private int carLoad; // доп нагрузка на дороги (количество машин)
-    private int metroLoad; // доп нагрузка на метро (количество людей)
+    private int roadLoad; // доп нагрузка на дороги (количество машин)
+    private int metroStationLoad; // доп нагрузка на метро (количество людей)
 }

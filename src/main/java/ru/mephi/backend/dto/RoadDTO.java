@@ -13,6 +13,6 @@ import java.util.List;
 public class RoadDTO {
     private String name;
     private List<Coordinate> coordinates;
-    private double capacity; // пропускная способность
-    private double intensity; // интенсивность (пассажиропоток)
+    private int capacity; // пропускная способность
+    private int intensity; // интенсивность (пассажиропоток)
 }
