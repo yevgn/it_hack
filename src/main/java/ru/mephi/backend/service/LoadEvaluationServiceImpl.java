@@ -42,6 +42,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
 
     private final UtilityService utilityService;
 
+    // Оценка запаса/дефифцита пропускной способности для LoadRequestWithPolygon
     @Override
     public LoadResponse getCapacityChangesForPolygon(LoadRequestWithPolygon request)
             throws URISyntaxException, IOException, InterruptedException {
@@ -68,6 +69,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
 
     }
 
+    // Оценка запаса/дефифцита пропускной способности для LoadRequestWithArea
     @Override
     public LoadResponse getCapacityChangesForArea(LoadRequestWithArea request)
             throws URISyntaxException, IOException, InterruptedException  {
@@ -93,6 +95,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
 
     }
 
+    // Оценка запаса/дефифцита пропускной способности для дорог на фрагменте карты
     @Override
     public Map<RoadDTO, Integer> getRoadCapacityChanges(Set<RoadDTO> roads, int extraLoad, Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
@@ -125,6 +128,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
     }
 
 
+    // Оценка запаса/дефифцита пропускной способности для станций метро на фрагменте карты
     @Override
     public Map<MetroStationDTO, Integer> getMetroStationCapacityChanges(Set<MetroStationDTO> metroStations,
                                                                        int extraLoad, Coordinate constructionPoint)
@@ -191,6 +195,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
 
     }
 
+    // Получение ближайших станций метро к точке застройки
     public Set<MetroStation> getClosestMetroStations(Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
 
@@ -262,7 +267,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
         return res;
     }
 
-    // Получаем список координат от точки застройки до центра Москвы
+    // Получаем множество координат от точки застройки до центра Москвы
     private CoordinateSet getCoordinateSetOfShortestRoute(Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
 
@@ -292,6 +297,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
         return coordinates;
     }
 
+    // отправка Http запроса на URL
     private HttpResponse<String> sendHttpRequest(String request)
             throws URISyntaxException, IOException, InterruptedException {
 
@@ -305,6 +311,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
     }
 
     // проверить имеющиеся дороги на фрагмента карты на принадлежность кратчайшему маршруту до центра
+    // Используется алгоритм поиска пересечений множеств точек каждой дороги с множеством точек кратчайшего пути до центра
     private Set<RoadDTO> getRoadsAlongShortestWay(Set<RoadDTO> roadsOnMap,
                                                   CoordinateSet shortestRouteCoordinates){
 
@@ -330,6 +337,8 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
         return roadsAlongShortestRoute;
     }
 
+    // Проверка пересения множеств из двух интервалов
+    // Сейчас этот метод не используется
     private boolean isIntersects(Coordinate left, Coordinate right, List<Coordinate> shortestRouteCoordinates, int step) {
         float shortestWayLeftLatitude, shortestWayRightLatitude;
         float shortestWayLeftLongitude, shortestWayRightLongitude;
@@ -364,6 +373,9 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
         return false;
     }
 
+    // Рассчитываем доп спрос на дороги пропорционально пиковой пропускной способности
+    // Ищем разность макс пропускной способности и пассажиропотока с учетом доп спроса
+    // Если разность положительная - есть запас, если отрицательная - дефицит
     private Map<RoadDTO, Integer> calcRoadCapacityChanges(Set<RoadDTO> roads, int extraLoad){
         int sum = roads.parallelStream().reduce(0, (x, r) -> x + r.getCapacity(), Integer::sum);
         float x = (float)1/sum;
@@ -372,6 +384,9 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
                 r-> r, r -> r.getCapacity() - (r.getIntensity() + Math.round(extraLoad * r.getCapacity() * x)) ));
     }
 
+    // Рассчитываем доп спрос на станции метро пропорционально пиковой пропускной способности
+    // Ищем разность макс пропускной способности и пассажиропотока с учетом доп спроса
+    // Если разность положительная - есть запас, если отрицательная - дефицит
     private Map<MetroStationDTO, Integer> calcMetroStationCapacityChanges(Set<MetroStationDTO> ms, int extraLoad){
         int sum = ms.parallelStream().reduce(0, (x, r) -> x + r.getCapacity(), Integer::sum);
         float x = (float)1/sum;
