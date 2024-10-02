@@ -80,7 +80,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
                 request.getAreaRequest().getCoordinate()
         );
 
-        Map<MetroStationDTO, Integer> metroStationCapacityChanges =getMetroStationCapacityChanges(
+        Map<MetroStationDTO, Integer> metroStationCapacityChanges = getMetroStationCapacityChanges(
                 request.getMetroStationSet(),
                 extraLoad.getMetroStationLoad(),
                 request.getAreaRequest().getCoordinate()
@@ -308,7 +308,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
     private Set<RoadDTO> getRoadsAlongShortestWay(Set<RoadDTO> roadsOnMap,
                                                   CoordinateSet shortestRouteCoordinates){
 
-        final int step = 1; // сколько координат пропускаем
+        // final int step = 1; // сколько координат пропускаем
         final int intersectionAmountRequired = 1; // сколько пересечений нужно
         int intersections = 0;
 
@@ -326,7 +326,6 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
                     break;
                 }
             }
-
         }
         return roadsAlongShortestRoute;
     }
