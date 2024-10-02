@@ -1,6 +1,7 @@
 package ru.mephi.backend.dto;
 
 import lombok.*;
+import ru.mephi.coordinateset.CoordinateSet;
 import ru.mephi.backend.enums.BuildingCategory;
 import ru.mephi.backend.enums.ResidentialType;
 
