@@ -1,6 +1,5 @@
 package ru.mephi.backend.service;
 
-import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.proj4j.*;
 import org.springframework.stereotype.Service;
@@ -15,14 +14,14 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class PolygonServiceImpl implements PolygonService {
+public class UtilityServiceImpl implements UtilityService {
     private final float percentOfOverallDemandForOffices = 0.35f;
     private final float percentOfOverallDemandForResidencies = 0.1f;
 
     @Override
     public double calculateSquare(PolygonRequest polygonRequest) {
-        List<Coordinate> coordinatesList = polygonRequest.getCoordinates();
-        int n = coordinatesList.size();
+        List<Coordinate> coordinates = polygonRequest.getCoordinates();
+        int n = coordinates.size();
 
         CRSFactory crsFactory = new CRSFactory();
         CoordinateReferenceSystem geographic = crsFactory.createFromName("EPSG:4326"); // WGS84
@@ -36,8 +35,8 @@ public class PolygonServiceImpl implements PolygonService {
         double[][] projectedCoordinates = new double[n][2];
 
         for (int i = 0; i < n; i++) {
-            srcCoord.x = coordinatesList.get(i).getLongitude();
-            srcCoord.y = coordinatesList.get(i).getLatitude();
+            srcCoord.x = coordinates.get(i).getLongitude();
+            srcCoord.y = coordinates.get(i).getLatitude();
             transform.transform(srcCoord, destCoord);
             projectedCoordinates[i][0] = destCoord.x;
             projectedCoordinates[i][1] = destCoord.y;
@@ -93,8 +92,9 @@ public class PolygonServiceImpl implements PolygonService {
 
     @Override
     public Coordinate calculateCentroid(PolygonRequest polygonRequest) {
-        List<Coordinate> coordinatesList = polygonRequest.getCoordinates();
-        int n = coordinatesList.size();
+        List<Coordinate> coordinates = polygonRequest.getCoordinates();
+
+        int n = coordinates.size();
 
         float centroidX = 0, centroidY = 0;
         float signedArea = 0.0f;
@@ -102,11 +102,11 @@ public class PolygonServiceImpl implements PolygonService {
         float a;
 
         // Проходим по всем вершинам кроме последней
-        for (int i = 0; i < n - 1; ++i) {
-            x0 = (float) coordinatesList.get(i).getLongitude();
-            y0 = (float) coordinatesList.get(i).getLatitude();
-            x1 = (float) coordinatesList.get(i + 1).getLongitude();
-            y1 = (float) coordinatesList.get(i + 1).getLatitude();
+        for (int i = 0; i < n; i++) {
+            x0 = (float) coordinates.get(i).getLongitude();
+            y0 = (float) coordinates.get(i).getLatitude();
+            x1 = (float) coordinates.get(i + 1).getLongitude();
+            y1 = (float) coordinates.get(i + 1).getLatitude();
             a = x0 * y1 - x1 * y0;
             signedArea += a;
             centroidX += (x0 + x1) * a;
@@ -114,10 +114,10 @@ public class PolygonServiceImpl implements PolygonService {
         }
 
         // Последняя вершина (замыкаем полигон)
-        x0 = coordinatesList.get(n - 1).getLongitude();
-        y0 = coordinatesList.get(n - 1).getLatitude();
-        x1 = coordinatesList.get(0).getLongitude();
-        y1 = coordinatesList.get(0).getLatitude();
+        x0 = coordinates.get(n - 1).getLongitude();
+        y0 = coordinates.get(n - 1).getLatitude();
+        x1 = coordinates.get(0).getLongitude();
+        y1 = coordinates.get(0).getLatitude();
         a = x0 * y1 - x1 * y0;
         signedArea += a;
         centroidX += (x0 + x1) * a;

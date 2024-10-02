@@ -14,4 +14,10 @@ public interface LoadEvaluationService {
     Map<MetroStationDTO, Integer> getMetroStationCapacityChanges(
             Set<MetroStationDTO> metroStations, int extraLoad, Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException;
+
+    LoadResponse getCapacityChangesForPolygon(LoadRequestWithPolygon request)
+            throws URISyntaxException, IOException, InterruptedException;
+
+    LoadResponse getCapacityChangesForArea(LoadRequestWithArea request)
+            throws URISyntaxException, IOException, InterruptedException ;
 }

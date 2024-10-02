@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.springframework.stereotype.Service;
+import ru.mephi.coordinateset.CoordinateSet;
 import ru.mephi.backend.dto.*;
 
 import java.io.IOException;
@@ -39,13 +40,66 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
             longitude(37.622148f).
             build();
 
+    private final UtilityService utilityService;
+
+    @Override
+    public LoadResponse getCapacityChangesForPolygon(LoadRequestWithPolygon request)
+            throws URISyntaxException, IOException, InterruptedException {
+
+        Coordinate constructionPoint = utilityService.calculateCentroid(request.getPolygonRequest());
+        LoadAdd extraLoad = utilityService.calculateLoadFromPolygon(request.getPolygonRequest());
+
+        Map<RoadDTO, Integer> roadCapacityChanges = getRoadCapacityChanges(
+                request.getRoadSet(),
+                extraLoad.getRoadLoad(),
+                constructionPoint
+        );
+
+        Map<MetroStationDTO, Integer> metroStationCapacityChanges = getMetroStationCapacityChanges(
+                request.getMetroStationSet(),
+                extraLoad.getMetroStationLoad(),
+                constructionPoint
+        );
+
+        return LoadResponse.builder()
+                .roadCapacityChanges(roadCapacityChanges)
+                .metroStationCapacityChanges(metroStationCapacityChanges)
+                .build();
+
+    }
+
+    @Override
+    public LoadResponse getCapacityChangesForArea(LoadRequestWithArea request)
+            throws URISyntaxException, IOException, InterruptedException  {
+
+        LoadAdd extraLoad = utilityService.calculateLoadFromArea(request.getAreaRequest());
+
+        Map<RoadDTO, Integer> roadCapacityChanges = getRoadCapacityChanges(
+                request.getRoadSet(),
+                extraLoad.getRoadLoad(),
+                request.getAreaRequest().getCoordinate()
+        );
+
+        Map<MetroStationDTO, Integer> metroStationCapacityChanges = getMetroStationCapacityChanges(
+                request.getMetroStationSet(),
+                extraLoad.getMetroStationLoad(),
+                request.getAreaRequest().getCoordinate()
+        );
+
+        return LoadResponse.builder()
+                .roadCapacityChanges(roadCapacityChanges)
+                .metroStationCapacityChanges(metroStationCapacityChanges)
+                .build();
+
+    }
+
     @Override
     public Map<RoadDTO, Integer> getRoadCapacityChanges(Set<RoadDTO> roads, int extraLoad, Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
 
         // Получили все дороги вдоль кратчайшего пути
         Set<RoadDTO> roadsAlongShortestRoute =
-                getRoadsAlongShortestWay(roads, getCoordinateListOfShortestRoute(constructionPoint));
+                getRoadsAlongShortestWay(roads, getCoordinateSetOfShortestRoute(constructionPoint));
 
         // Дороги на фрагменте карты которые не входят в кратчайший путь
         Set<RoadDTO> roadsNotIncludedInShortestRoute =
@@ -209,9 +263,8 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
     }
 
     // Получаем список координат от точки застройки до центра Москвы
-    private List<Coordinate> getCoordinateListOfShortestRoute(Coordinate constructionPoint)
+    private CoordinateSet getCoordinateSetOfShortestRoute(Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
-
 
         String request = String.format(GRAPHHOPPER_URL, "car", "false") + "&point=" + constructionPoint.getLatitude() +
                 "," + constructionPoint.getLongitude() + "&point=" + MoscowCentreCoordinate.getLatitude() +
@@ -226,7 +279,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
                 .getJSONObject("points")
                .getJSONArray("coordinates");
 
-       List<Coordinate> coordinates = new ArrayList<>();
+      CoordinateSet coordinates = new CoordinateSet();
 
        for(int i = 0; i < coordinatesArray.length(); i++){
            JSONArray arr =  coordinatesArray.getJSONArray(i);
@@ -253,9 +306,9 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
 
     // проверить имеющиеся дороги на фрагмента карты на принадлежность кратчайшему маршруту до центра
     private Set<RoadDTO> getRoadsAlongShortestWay(Set<RoadDTO> roadsOnMap,
-                                                  List<Coordinate> shortestRouteCoordinates){
+                                                  CoordinateSet shortestRouteCoordinates){
 
-        final int step = 1; // сколько координат пропускаем
+        // final int step = 1; // сколько координат пропускаем
         final int intersectionAmountRequired = 1; // сколько пересечений нужно
         int intersections = 0;
 
@@ -263,19 +316,17 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
 
         for (RoadDTO roadDTO : roadsOnMap) {
 
-            List<Coordinate> coordinates = roadDTO.getCoordinates();
-            for(int i = 0; i + step < coordinates.size(); i++){
-                if(isIntersects(coordinates.get(i), coordinates.get(i + step), shortestRouteCoordinates, step))
-                    intersections++;
+            CoordinateSet coordinates = roadDTO.getCoordinates();
 
-                if (intersections == intersectionAmountRequired) {
+            for(Coordinate c : coordinates){
+                if(shortestRouteCoordinates.containsCoordinate(c.getLatitude(), c.getLongitude()))
+                    intersections++;
+                if(intersections == intersectionAmountRequired){
                     roadsAlongShortestRoute.add(roadDTO);
                     break;
                 }
             }
-
         }
-
         return roadsAlongShortestRoute;
     }
 
