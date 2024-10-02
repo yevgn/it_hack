@@ -1,5 +1,6 @@
 package ru.mephi.backend.service;
 
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.proj4j.*;
 import org.springframework.stereotype.Service;
@@ -81,13 +82,13 @@ public class PolygonServiceImpl implements PolygonService {
     @Override
     public LoadAdd calculateLoadFromPolygon(PolygonRequest polygonRequest) {
         int totalPopulation = calculatePopulationFromPolygonRequest(polygonRequest);
-        return calcLoad(totalPopulation);
+        return calcLoad(totalPopulation, polygonRequest.getCategory());
     }
 
     @Override
     public LoadAdd calculateLoadFromArea(AreaRequest area) {
         int totalPopulation = calculatePopulationFromAreaRequest(area);
-        return calcLoad(totalPopulation);
+        return calcLoad(totalPopulation, area.getCategory());
     }
 
     @Override
@@ -151,9 +152,12 @@ public class PolygonServiceImpl implements PolygonService {
         return population;
     }
 
-    private LoadAdd calcLoad(int totalPopulation) {
-        int workingAgePopulation = (int) (totalPopulation * 0.57);
+    private LoadAdd calcLoad(int totalPopulation, BuildingCategory category) {
+        int workingAgePopulation = 0;
+        if(category == BuildingCategory.RESIDENTIAL)
+            workingAgePopulation = (int) (totalPopulation * 0.57);
 
+        workingAgePopulation = totalPopulation;
         // Modal split: 70% public transport, 30% individual transport
         int publicTransportUsers = (int) (workingAgePopulation * 0.70);
         int individualTransportUsers = (int) (workingAgePopulation * 0.30);

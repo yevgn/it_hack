@@ -16,9 +16,7 @@ import ru.mephi.backend.service.PolygonService;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor

@@ -4,12 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+
 import org.springframework.stereotype.Service;
 import ru.mephi.backend.dto.*;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -17,8 +15,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
