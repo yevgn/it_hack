@@ -13,6 +13,6 @@ import java.util.Set;
 @NoArgsConstructor
 public class LoadRequestWithArea {
     private AreaRequest areaRequest;
-    private Set<RoadDTO> roadSet;
-    private Set<MetroStationDTO> metroStationSet;
+    private Set<RoadDTO> roadSet;  // множество всех дорог на фрагменте карты
+    private Set<MetroStationDTO> metroStationSet; // множество всех станций метро на фрагменте карты
 }
