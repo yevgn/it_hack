@@ -84,6 +84,7 @@ public class LoadEvaluationController {
                             .metroStationCapacityChanges(metroStationCapacityChanges)
                             .build()
             );
+
         } catch (URISyntaxException | IOException | InterruptedException e){
             log.error(e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

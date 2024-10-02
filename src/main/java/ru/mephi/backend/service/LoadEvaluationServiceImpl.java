@@ -49,19 +49,23 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
 
         // Дороги на фрагменте карты которые не входят в кратчайший путь
         Set<RoadDTO> roadsNotIncludedInShortestRoute =
-                roadsAlongShortestRoute.parallelStream().filter( o -> !roads.contains(o)).collect(Collectors.toSet());
+                roads.parallelStream().filter( o -> !roadsAlongShortestRoute.contains(o)).collect(Collectors.toSet());
 
-        // По условию 80% едет в центр (вдоль кратчайшего пути)
+        // По условию 80% едет в центр (Предполагаем, что все поедут по кратчайшему пути)
         final float percentCarDrivingToCenter = 0.8f;
+        // Получили расчет запаса/дефицита пропускной способности для дорог вдоль кратчайшего пути
         Map<RoadDTO, Integer> roadCapacityChanges
                 = calcRoadCapacityChanges(roadsAlongShortestRoute, Math.round(extraLoad * percentCarDrivingToCenter));
 
         // По условию 20% едет на окраины
-        // Объединяем множества
         final float percentCarDrivingToSuburbs = 0.2f;
+        // Получили расчет запаса/дефицита пропускной способности для остальных дорог
+        // Объединяем множества
         roadCapacityChanges.putAll(
                 calcRoadCapacityChanges(
-                        roadsNotIncludedInShortestRoute, Math.round(extraLoad * percentCarDrivingToSuburbs )));
+                        roadsNotIncludedInShortestRoute, Math.round(extraLoad * percentCarDrivingToSuburbs)
+                )
+        );
 
         return roadCapacityChanges;
     }
@@ -79,15 +83,18 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
         Set<MetroStationDTO> closestMSDTO = mapToDTO(closestMS, metroStations);
 
         // Более дальние станции метро на фрагменте карты
-        Set<MetroStationDTO> notClosestMSDTO = closestMSDTO.parallelStream().
-                filter( o -> !metroStations.contains(o)).collect(Collectors.toSet());
+        Set<MetroStationDTO> notClosestMSDTO = metroStations.parallelStream().
+                filter( o -> !closestMSDTO.contains(o)).collect(Collectors.toSet());
 
         // Предположили, что 80% населения пользуется ближайшими станциями метро
+        // Получаем расчет запаса/дефицита пропускной способности для ближайших станций
         final float percentPeopleGoingToClosestMS = 0.8f;
         Map<MetroStationDTO, Integer> metroStationCapacityChanges
                 = calcMetroStationCapacityChanges(closestMSDTO, Math.round(extraLoad * percentPeopleGoingToClosestMS));
 
-       // Предположим что оставшиеся 20% пользуются более дальними станциями метро
+        // Предположим что оставшиеся 20% пользуются более дальними станциями метро
+        // Получаем расчет запаса/дефицита пропускной способности для более дальних станций
+        // Объединияем результат
         final float percentPeopleGoingToFartherMS = 0.2f;
         metroStationCapacityChanges.putAll(
                 calcMetroStationCapacityChanges(notClosestMSDTO, Math.round(extraLoad * percentPeopleGoingToFartherMS))
@@ -131,7 +138,6 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
     public Set<MetroStation> getClosestMetroStations(Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
 
-
         // Возьмем, например, две ближайшие станции метро
         final int limit = 2;
         String request = String.format(YANDEX_GEOCODER_URL,constructionPoint.getLongitude(),
@@ -174,6 +180,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
 
     private Set<MetroStationDTO> mapToDTO(Set<MetroStation> msSet, Set<MetroStationDTO> msDTOSet){
         Set<MetroStationDTO> res = new HashSet<>();
+
         MetroStationDTO msDTO;
         Iterator<MetroStationDTO> iter;
 
@@ -182,7 +189,8 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
             while(iter.hasNext()){
                 msDTO = iter.next();
                 if(metroStation.getName().equals(msDTO.getName()) && metroStation.getRoute().equals(msDTO.getRoute())){
-                    res.add(MetroStationDTO.builder()
+                    res.add(
+                            MetroStationDTO.builder()
                             .name(msDTO.getName())
                             .route(msDTO.getRoute())
                             .coordinate(msDTO.getCoordinate())
@@ -198,6 +206,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
         return res;
     }
 
+    // Получаем список координат от точки застройки до центра Москвы
     private List<Coordinate> getCoordinateListOfShortestRoute(Coordinate constructionPoint)
             throws URISyntaxException, IOException, InterruptedException {
 
@@ -206,11 +215,9 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
                 "," + constructionPoint.getLongitude() + "&point=" + MoscowCentreCoordinate.getLatitude() +
                 "," + MoscowCentreCoordinate.getLongitude();
 
-        System.out.println(request);
         HttpResponse<String> response = sendHttpRequest(request);
 
         JSONObject jsonObj = new JSONObject(response.body());
-        System.out.println(response.body());
 
        JSONArray coordinatesArray = jsonObj.getJSONArray("paths")
                .getJSONObject(0)
@@ -309,7 +316,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
         float x = (float)1/sum;
 
         return roads.parallelStream().collect(Collectors.toMap(
-                r-> r, r -> r.getCapacity() - (r.getIntensity() + Math.round(r.getCapacity() * x)) ));
+                r-> r, r -> r.getCapacity() - (r.getIntensity() + Math.round(extraLoad * r.getCapacity() * x)) ));
     }
 
     private Map<MetroStationDTO, Integer> calcMetroStationCapacityChanges(Set<MetroStationDTO> ms, int extraLoad){
@@ -317,7 +324,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
         float x = (float)1/sum;
 
         return ms.parallelStream().collect(Collectors.toMap(
-                r-> r, r -> r.getCapacity() - (r.getIntensity() + Math.round(r.getCapacity() * x)) ));
+                r-> r, r -> r.getCapacity() - (r.getIntensity() + Math.round(extraLoad * r.getCapacity() * x)) ));
     }
 
 }

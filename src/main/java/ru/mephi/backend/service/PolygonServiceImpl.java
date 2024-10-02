@@ -16,6 +16,8 @@ import java.util.List;
 @Service
 @Slf4j
 public class PolygonServiceImpl implements PolygonService {
+    private final float percentOfOverallDemandForOffices = 0.35f;
+    private final float percentOfOverallDemandForResidencies = 0.1f;
 
     @Override
     public double calculateSquare(PolygonRequest polygonRequest) {
@@ -66,29 +68,27 @@ public class PolygonServiceImpl implements PolygonService {
     @Override
     public int calculatePopulationFromPolygonRequest(PolygonRequest polygonRequest) {
         double area = calculateSquare(polygonRequest);
-        final float percentOfOverallDemandForResidentialBuilding = 0.1f; // 10% от спроса для жилых застроек
-        return Math.round(calcPopulation(area, polygonRequest.getCategory(), polygonRequest.getType(),
-                polygonRequest.getFloors()) * percentOfOverallDemandForResidentialBuilding);
+        return calcPopulation(area, polygonRequest.getCategory(), polygonRequest.getType(),
+                polygonRequest.getFloors());
     }
 
     @Override
     public int calculatePopulationFromAreaRequest(AreaRequest area1) {
         double area = area1.getArea();
-        final float percentOfOverallDemandForOffices = 0.35f;
-        return Math.round(calcPopulation(area, area1.getCategory(), area1.getType(),
-                1) * percentOfOverallDemandForOffices);
+        return calcPopulation(area, area1.getCategory(), area1.getType(),
+                1);
     }
 
     @Override
     public LoadAdd calculateLoadFromPolygon(PolygonRequest polygonRequest) {
-        int totalPopulation = calculatePopulationFromPolygonRequest(polygonRequest);
-        return calcLoad(totalPopulation, polygonRequest.getCategory());
+        int population = calculatePopulationFromPolygonRequest(polygonRequest);
+        return calcLoad(population, polygonRequest.getCategory());
     }
 
     @Override
     public LoadAdd calculateLoadFromArea(AreaRequest area) {
-        int totalPopulation = calculatePopulationFromAreaRequest(area);
-        return calcLoad(totalPopulation, area.getCategory());
+        int population = calculatePopulationFromAreaRequest(area);
+        return calcLoad(population, area.getCategory());
     }
 
     @Override
@@ -149,15 +149,22 @@ public class PolygonServiceImpl implements PolygonService {
             population = (int) (area / areaPerPerson);
         }
 
+        if(category == BuildingCategory.RESIDENTIAL)
+            population = Math.round(population * percentOfOverallDemandForResidencies);
+        if(category == BuildingCategory.OFFICE)
+            population = Math.round(population * percentOfOverallDemandForOffices;
+
         return population;
     }
 
-    private LoadAdd calcLoad(int totalPopulation, BuildingCategory category) {
+    private LoadAdd calcLoad(int population, BuildingCategory category) {
         int workingAgePopulation = 0;
-        if(category == BuildingCategory.RESIDENTIAL)
-            workingAgePopulation = (int) (totalPopulation * 0.57);
 
-        workingAgePopulation = totalPopulation;
+        if(category == BuildingCategory.RESIDENTIAL)
+            workingAgePopulation = (int) (population * 0.57);
+        else
+            workingAgePopulation = population;
+
         // Modal split: 70% public transport, 30% individual transport
         int publicTransportUsers = (int) (workingAgePopulation * 0.70);
         int individualTransportUsers = (int) (workingAgePopulation * 0.30);
