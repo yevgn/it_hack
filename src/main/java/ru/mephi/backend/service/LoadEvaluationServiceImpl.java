@@ -40,14 +40,14 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
             longitude(37.622148f).
             build();
 
-    private final PolygonService polygonService;
+    private final UtilityService utilityService;
 
     @Override
     public LoadResponse getCapacityChangesForPolygon(LoadRequestWithPolygon request)
             throws URISyntaxException, IOException, InterruptedException {
 
-        Coordinate constructionPoint = polygonService.calculateCentroid(request.getPolygonRequest());
-        LoadAdd extraLoad = polygonService.calculateLoadFromPolygon(request.getPolygonRequest());
+        Coordinate constructionPoint = utilityService.calculateCentroid(request.getPolygonRequest());
+        LoadAdd extraLoad = utilityService.calculateLoadFromPolygon(request.getPolygonRequest());
 
         Map<RoadDTO, Integer> roadCapacityChanges = getRoadCapacityChanges(
                 request.getRoadSet(),
@@ -72,7 +72,7 @@ public class LoadEvaluationServiceImpl implements LoadEvaluationService{
     public LoadResponse getCapacityChangesForArea(LoadRequestWithArea request)
             throws URISyntaxException, IOException, InterruptedException  {
 
-        LoadAdd extraLoad = polygonService.calculateLoadFromArea(request.getAreaRequest());
+        LoadAdd extraLoad = utilityService.calculateLoadFromArea(request.getAreaRequest());
 
         Map<RoadDTO, Integer> roadCapacityChanges = getRoadCapacityChanges(
                 request.getRoadSet(),

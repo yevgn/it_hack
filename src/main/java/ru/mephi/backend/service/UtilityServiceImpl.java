@@ -9,14 +9,12 @@ import ru.mephi.backend.dto.LoadAdd;
 import ru.mephi.backend.dto.PolygonRequest;
 import ru.mephi.backend.enums.BuildingCategory;
 import ru.mephi.backend.enums.ResidentialType;
-import ru.mephi.coordinateset.CoordinateSet;
 
-import java.util.Iterator;
 import java.util.List;
 
 @Service
 @Slf4j
-public class PolygonServiceImpl implements PolygonService {
+public class UtilityServiceImpl implements UtilityService {
     private final float percentOfOverallDemandForOffices = 0.35f;
     private final float percentOfOverallDemandForResidencies = 0.1f;
 
