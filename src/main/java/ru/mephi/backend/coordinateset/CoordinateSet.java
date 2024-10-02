@@ -1,4 +1,4 @@
-package ru.mephi.coordinateset;
+package ru.mephi.backend.coordinateset;
 
 
 import java.util.Collection;

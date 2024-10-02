@@ -4,7 +4,7 @@ package ru.mephi.backend.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.mephi.coordinateset.CoordinateSet;
+import ru.mephi.backend.coordinateset.CoordinateSet;
 
 import java.util.Objects;
 

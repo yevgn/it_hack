@@ -6,7 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.springframework.stereotype.Service;
-import ru.mephi.coordinateset.CoordinateSet;
+import ru.mephi.backend.coordinateset.CoordinateSet;
 import ru.mephi.backend.dto.*;
 
 import java.io.IOException;
