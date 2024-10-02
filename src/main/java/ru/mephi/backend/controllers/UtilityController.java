@@ -3,6 +3,7 @@ package ru.mephi.backend.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.mephi.backend.dto.AreaRequest;
+import ru.mephi.backend.dto.Coordinate;
 import ru.mephi.backend.dto.LoadAdd;
 import ru.mephi.backend.dto.PolygonRequest;
 import ru.mephi.backend.service.PolygonService;
@@ -37,5 +38,10 @@ public class UtilityController {
     @PostMapping("/load/area")
     public LoadAdd calculateLoadArea(@RequestBody AreaRequest areaRequest) {
         return polygonService.calculateLoadFromArea(areaRequest);
+    }
+
+    @PostMapping("/centroid")
+    public Coordinate calculateCentroid(@RequestBody PolygonRequest polygonRequest) {
+        return polygonService.calculateCentroid(polygonRequest);
     }
 }

@@ -90,6 +90,47 @@ public class PolygonServiceImpl implements PolygonService {
         return calcLoad(totalPopulation);
     }
 
+    @Override
+    public Coordinate calculateCentroid(PolygonRequest polygonRequest) {
+        List<Coordinate> coordinatesList = polygonRequest.getCoordinates();
+        int n = coordinatesList.size();
+
+        float centroidX = 0, centroidY = 0;
+        float signedArea = 0.0f;
+        float x0, y0, x1, y1;  // Временные переменные для координат вершин
+        float a;
+
+        // Проходим по всем вершинам кроме последней
+        for (int i = 0; i < n - 1; ++i) {
+            x0 = (float) coordinatesList.get(i).getLongitude();
+            y0 = (float) coordinatesList.get(i).getLatitude();
+            x1 = (float) coordinatesList.get(i + 1).getLongitude();
+            y1 = (float) coordinatesList.get(i + 1).getLatitude();
+            a = x0 * y1 - x1 * y0;
+            signedArea += a;
+            centroidX += (x0 + x1) * a;
+            centroidY += (y0 + y1) * a;
+        }
+
+        // Последняя вершина (замыкаем полигон)
+        x0 = coordinatesList.get(n - 1).getLongitude();
+        y0 = coordinatesList.get(n - 1).getLatitude();
+        x1 = coordinatesList.get(0).getLongitude();
+        y1 = coordinatesList.get(0).getLatitude();
+        a = x0 * y1 - x1 * y0;
+        signedArea += a;
+        centroidX += (x0 + x1) * a;
+        centroidY += (y0 + y1) * a;
+
+        // Завершающие вычисления
+        signedArea *= 0.5f;
+        centroidX /= (6.0f * signedArea);
+        centroidY /= (6.0f * signedArea);
+
+        // Возвращаем в виде (широта, долгота)
+        return new Coordinate(centroidY, centroidX);
+    }
+
     private int calcPopulation(double area, BuildingCategory category, ResidentialType type, int floors) {
         int population = 0;
 
