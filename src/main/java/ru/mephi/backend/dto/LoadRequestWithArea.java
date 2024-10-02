@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
+// Используется, если пользователь ввел площадь вручную.
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

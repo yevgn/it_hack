@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
+// Используется, если пользователь отметил точки площади застройки на карте и ввел количество этажей
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

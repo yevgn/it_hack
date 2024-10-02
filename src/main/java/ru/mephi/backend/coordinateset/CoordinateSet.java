@@ -7,6 +7,8 @@ import java.util.Iterator;
 
 import ru.mephi.backend.dto.Coordinate;
 
+// Свое множество для координат
+
 public class CoordinateSet extends HashSet<Coordinate> {
     public static final float epsilon = 0.002f;
 

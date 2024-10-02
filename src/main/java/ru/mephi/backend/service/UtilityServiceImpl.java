@@ -18,6 +18,7 @@ public class UtilityServiceImpl implements UtilityService {
     private final float percentOfOverallDemandForOffices = 0.35f;
     private final float percentOfOverallDemandForResidencies = 0.1f;
 
+    // Считаем площадь по точкам
     @Override
     public double calculateSquare(PolygonRequest polygonRequest) {
         List<Coordinate> coordinates = polygonRequest.getCoordinates();
@@ -90,6 +91,7 @@ public class UtilityServiceImpl implements UtilityService {
         return calcLoad(population, area.getCategory());
     }
 
+    // Нахождение центра координат застройки по точкам
     @Override
     public Coordinate calculateCentroid(PolygonRequest polygonRequest) {
         List<Coordinate> coordinates = polygonRequest.getCoordinates();

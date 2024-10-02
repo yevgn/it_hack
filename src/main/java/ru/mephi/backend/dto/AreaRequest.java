@@ -4,6 +4,8 @@ import lombok.*;
 import ru.mephi.backend.enums.BuildingCategory;
 import ru.mephi.backend.enums.ResidentialType;
 
+// Используется, если пользователь ввел площадь вручную.
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
